@@ -665,7 +665,7 @@ class QNode:
 
         # check that no wires are measured more than once
         m_wires = list(_flatten(list(w for ex in self.circuit.observables for w in ex.wires)))
-        if len(m_wires) != len(set(m_wires)):
+        if len(m_wires) != len(set(m_wires)) and not qml.operation.Covariance in [o.return_type for o in self.circuit.observables]:
             raise QuantumFunctionError('Each wire in the quantum circuit can only be measured once.')
 
         def check_op(op):
@@ -1103,7 +1103,7 @@ class QNode:
         # boolean mask: elements are True where the return type is a variance, False for expectations
         where_var = [e.return_type is qml.operation.Variance for e in self.circuit.observables]
         applicable_nodes = [e for e in self.circuit.observables if e.return_type == qml.operation.Variance]
-
+        
         for e in applicable_nodes:
             # temporarily convert return type to expectation
             e.return_type = qml.operation.Expectation

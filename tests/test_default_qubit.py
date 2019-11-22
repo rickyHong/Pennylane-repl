@@ -1667,3 +1667,29 @@ class TestTensorSample:
             )
         ) / 16
         assert np.allclose(var, expected, atol=tol, rtol=0)
+
+import autograd
+
+class TestCovariance:
+
+    def test_forward_cov(self):
+        dev = qml.device("default.qubit", wires=2)
+
+        @qml.qnode(dev)
+        def circuit(a, b, c):
+            qml.RZ(a, wires=[0])
+            qml.RX(b, wires=[0])
+            qml.RZ(c, wires=[0])
+            qml.CNOT(wires=[0, 1])
+
+            return qml.cov_mat(qml.PauliZ(0), qml.Hadamard(1))
+
+        ret = circuit(0.2, 0.7, 0.4)
+
+        print(ret.reshape(2,2))
+
+        jacobian_fn = autograd.jacobian(circuit)
+
+        print(jacobian_fn(0.2, 0.7, 0.4))
+
+        raise Exception()

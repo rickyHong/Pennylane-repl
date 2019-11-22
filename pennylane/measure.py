@@ -18,7 +18,7 @@ outcomes from quantum observables - expectation values, variances of expectation
 and measurement samples.
 """
 from .qnode import QNode, QuantumFunctionError
-from .operation import Observable, Sample, Variance, Expectation, Tensor
+from .operation import Observable, Sample, Variance, Expectation, Covariance, Tensor, CovarianceContainer
 
 
 def _remove_if_in_queue(op):
@@ -89,6 +89,58 @@ def var(op):
         QNode._current_context._append_op(op)
 
     return op
+
+
+def cov(op1, op2):
+    r"""Covariance of the supplied observable.
+
+    Args:
+        op (Observable): a quantum observable object
+
+    Raises:
+        QuantumFunctionError: `op` is not an instance of :class:`~.Observable`
+    """
+    if not isinstance(op1, Observable) or not isinstance(op2, Observable):
+        raise QuantumFunctionError(
+            "{} is not an observable: cannot be used with var".format(op.name)
+        )
+
+    for op in [op1, op2]:
+        if QNode._current_context is not None:
+            # delete operations from QNode queue
+            if isinstance(op, Tensor):
+                for o in op.obs:
+                    QNode._current_context.queue.remove(o)
+            else:
+                QNode._current_context.queue.remove(op)
+
+        op.return_type = None
+
+    if QNode._current_context is not None:
+        # add observable to QNode observable queue
+        op = CovarianceContainer(op1, op2)
+        op.return_type = Covariance
+        QNode._current_context._append_op(op)
+
+    return op
+
+def cov_mat(*obs):
+    N = len(obs)
+
+    ret = []
+
+    if QNode._current_context is not None:
+        for o in obs:
+            QNode._current_context.queue.remove(o)
+
+    for i in range(N):
+        for j in range(N):
+            if i == j:
+                ret.append(var(obs[i].__class__(*obs[i].params, wires=obs[i].wires)))
+            else:
+                ret.append(cov(obs[i].__class__(*obs[i].params, wires=obs[i].wires), obs[j].__class__(*obs[j].params, wires=obs[j].wires)))
+
+    return ret
 
 
 def sample(op):

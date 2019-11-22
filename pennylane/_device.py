@@ -19,7 +19,7 @@ import abc
 
 import numpy as np
 
-from pennylane.operation import Operation, Observable, Sample, Variance, Expectation, Tensor
+from pennylane.operation import Operation, Observable, Sample, Variance, Expectation, Tensor, Covariance, CovarianceContainer
 from .qnode import QuantumFunctionError
 
 
@@ -183,6 +183,9 @@ class Device(abc.ABC):
 
                 elif obs.return_type is Sample:
                     results.append(np.array(self.sample(obs.name, obs.wires, obs.parameters)))
+
+                elif obs.return_type is Covariance:
+                    results.append(self.cov(obs.A.name, obs.A.wires, obs.A.parameters, obs.B.name, obs.B.wires, obs.B.parameters))
 
                 elif obs.return_type is not None:
                     raise QuantumFunctionError("Unsupported return type specified for observable {}".format(obs.name))
@@ -373,6 +376,12 @@ class Device(abc.ABC):
                 for i in o.obs:
                     if not self.supports_observable(i.name):
                         raise DeviceError("Observable {} not supported on device {}".format(i.name, self.short_name))
+
+            elif isinstance(o, CovarianceContainer):
+                for i in [o.A, o.B]:
+                    if not self.supports_observable(i.name):
+                        raise DeviceError("Observable {} not supported on device {}".format(i.name, self.short_name))
+
             else:
 
                 observable_name = o.name
@@ -432,6 +441,9 @@ class Device(abc.ABC):
             float: variance :math:`\mathrm{var}(A) = \bra{\psi}A^2\ket{\psi} - \bra{\psi}A\ket{\psi}^2`
         """
         raise NotImplementedError("Returning variances from QNodes not currently supported by {}".format(self.short_name))
+
+    def cov(self, observable1, wires1, par1, observable2, wires2, par2):
+        raise NotImplementedError("Returning covariances from QNodes not currently supported by {}".format(self.short_name))
 
     def sample(self, observable, wires, par):
         """Return a sample of an observable.
