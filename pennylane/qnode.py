@@ -1088,6 +1088,117 @@ class QNode:
 
         return pd
 
+    def _pd_analytic_cov(self, param_values, param_idx, **kwargs):
+        var_idx = [i for i, e in enumerate(self.circuit.observables) if e.return_type is qml.operation.Variance]
+        cov_idx = [i for i, e in enumerate(self.circuit.observables) if e.return_type is qml.operation.Covariance]
+
+        cache_dict = {}
+
+
+        # Assume all nodes are either var or cov
+        for e in self.circuit.observables:
+            if e.return_type == qml.operation.Variance:
+                if e.__class__.__name__ == "Hermitian":
+                    A = e.params[0]  # Hermitian matrix
+                    w = e.wires
+
+                    # make a copy of the original variance
+                    new = qml.expval(qml.ops.Hermitian(A @ A, w))
+
+                    # replace the Hermitian variance with <A^2> expectation
+                    self.circuit.update_node(e, new)
+
+                    cache_dict[new] = e
+                else:
+                    # make a copy of the original variance
+                    w = e.wires
+                    new = qml.expval(qml.ops.Identity(wires=w))
+
+                    # replace the Hermitian variance with <A^2> expectation
+                    self.circuit.update_node(e, new)
+                    cache_dict[new] = e
+
+            elif e.return_type == qml.operation.Covariance:
+
+                # make a copy of the original variance
+                new = qml.expval(e.A @ e.B, e.wires)
+
+                # replace the Hermitian variance with <A @ B> expectation
+                self.circuit.update_node(e, new)
+                    cache_dict[new] = e
+
+            e.return_type = qml.operation.Expectation
+
+        pdAB = np.asarray(self._pd_analytic(param_values, param_idx, **kwargs))
+
+        for new in cache_dict:
+            [o for o in self.circuit.observables if o == new]
+            o = cache_dict[new]
+
+        for i in var_idx:
+            self.circuit.observables[i].return_type = qml.operation.Variance
+        for i in cov_idx:
+            self.circuit.observables[i].return_type = qml.operation.Covariance
+
+        # Assume all nodes are either var or cov
+        for e in self.circuit.observables:
+            if e.return_type == qml.operation.Variance:
+                pdA = 0
+
+                if e.__class__.__name__ == "Hermitian":
+                    A = e.params[0]  # Hermitian matrix
+                    w = e.wires
+
+                    # make a copy of the original variance
+                    new = qml.expval(qml.ops.Hermitian(A @ A, w))
+
+                    # replace the Hermitian variance with <A^2> expectation
+                    self.circuit.update_node(e, new)
+
+                    # calculate the analytic derivative of <A^2>
+                    pdAB = np.asarray(self._pd_analytic(param_values, param_idx, **kwargs))
+
+                    # restore the original Hermitian variance
+                    self.circuit.update_node(new, e)
+
+            elif e.return_type == qml.operation.Covariance:
+
+                # make a copy of the original variance
+                new = qml.expval(e.A @ e.B, e.wires)
+
+                # replace the Hermitian variance with <A @ B> expectation
+                self.circuit.update_node(e, new)
+
+                # calculate the analytic derivative 
+                pdAB = np.asarray(self._pd_analytic(param_values, param_idx, **kwargs))
+
+                # restore the original Hermitian variance
+                self.circuit.update_node(new, e)
+
+            e.return_type = qml.operation.Expectation
+
+        for i in var_idx:
+            self.circuit.observables[i].return_type = qml.operation.Variance
+        for i in cov_idx:
+            self.circuit.observables[i].return_type = qml.operation.Covariance
+
+
+        # evaluate circuit value at original parameters
+        evA = np.asarray(self.evaluate(param_values, **kwargs))
+        # evaluate circuit gradient assuming all outputs are expectations
+        pdA = self._pd_analytic(param_values, param_idx, **kwargs)
+
+        # restore the return type
+        for e in applicable_nodes:
+            e.return_type = qml.operation.Variance
+
+        # restore original caching setting
+        self.cache = cache
+
+        # return the variance shift rule where where_var==True,
+        # otherwise return the expectation parameter shift rule
+        return np.where(where_var, pdA2-2*evA*pdA, pdA)
+
     def _pd_analytic_var(self, param_values, param_idx, **kwargs):
         """Partial derivative of variances of observables using the analytic method.
 
