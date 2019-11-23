@@ -309,7 +309,7 @@ class CircuitGraph:
             ValueError: if the new :class:`~.Operator` does not act on the same wires as the old one
         """
         # NOTE Does not alter the graph edges in any way. variable_deps is not changed, _grid is not changed. Dangerous!
-        if new.wires != old.wires:
-            raise ValueError("The new Operator must act on the same wires as the old one.")
+        #if new.wires != old.wires:
+        #    raise ValueError("The new Operator must act on the same wires as the old one.")
         new.queue_idx = old.queue_idx
         nx.relabel_nodes(self._graph, {old: new}, copy=False)  # change the graph in place
