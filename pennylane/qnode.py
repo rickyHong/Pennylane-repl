@@ -1097,6 +1097,9 @@ class QNode:
         cov_idx = [i for i, e in enumerate(self.circuit.observables) if e.return_type is qml.operation.Covariance]
 
         cache_dict = {}
+        #print([str(node) for node in self.circuit.graph.nodes])
+        cache = self.cache
+        self.cache = True
 
         # Assume all nodes are either var or cov
         for e in self.circuit.observables:
@@ -1109,6 +1112,7 @@ class QNode:
                     new = qml.expval(qml.ops.Hermitian(A @ A, w))
 
                     # replace the Hermitian variance with <A^2> expectation
+                    #print("Update {} -> {}".format(e, new))
                     self.circuit.update_node(e, new)
 
                     cache_dict[new] = e
@@ -1118,6 +1122,7 @@ class QNode:
                     new = qml.expval(qml.ops.Identity(wires=w))
 
                     # replace the Hermitian variance with <A^2> expectation
+                    #print("Update {} -> {}".format(e, new))
                     self.circuit.update_node(e, new)
                     cache_dict[new] = e
 
@@ -1127,6 +1132,7 @@ class QNode:
                 new = qml.expval(e.A @ e.B)
 
                 # replace the Hermitian variance with <A @ B> expectation
+                #print("Update {} -> {}".format(e, new))
                 self.circuit.update_node(e, new)
                 cache_dict[new] = e
 
@@ -1134,7 +1140,9 @@ class QNode:
 
         pdAB = np.asarray(self._pd_analytic(param_values, param_idx, **kwargs))
 
+        #print([str(node) for node in self.circuit.graph.nodes])
         for new in cache_dict:
+            #print("Restore {} -> {}".format(new, cache_dict[new]))
             self.circuit.update_node(new, cache_dict[new])
 
         for i in var_idx:
@@ -1142,16 +1150,18 @@ class QNode:
         for i in cov_idx:
             self.circuit.observables[i].return_type = qml.operation.Covariance
 
- 
         cache_dict = {}
 
+        #print([str(node) for node in self.circuit.graph.nodes])
         # Assume all nodes are either var or cov
         for e in self.circuit.observables:
             if e.return_type == qml.operation.Covariance:
-                new = qml.expval(e.A.__class__(*e.A.params, wires=e.A.wires))
+                new = qml.expval(e.A)
+                new.id = " COV"
 
-                # replace the Hermitian variance with <A @ B> expectation
+                #print("Update {} -> {}".format(e, new))
                 self.circuit.update_node(e, new)
+                #print([str(node) for node in self.circuit.graph.nodes])
                 cache_dict[new] = e
             else:
                 e.return_type = qml.operation.Expectation
@@ -1159,11 +1169,9 @@ class QNode:
         pdA = np.asarray(self._pd_analytic(param_values, param_idx, **kwargs))
         evA = np.asarray(self.evaluate(param_values, **kwargs))
 
-        print(pdAB)
-        print(pdA)
-        print(evA)
-        print(cache_dict)
+        #print([str(node) for node in self.circuit.graph.nodes])
         for new in cache_dict:
+            #print("Restore {} -> {}".format(new, cache_dict[new]))
             self.circuit.update_node(new, cache_dict[new])
 
         for i in var_idx:
@@ -1177,6 +1185,7 @@ class QNode:
         for e in self.circuit.observables:
             if e.return_type == qml.operation.Covariance:
                 new = qml.expval(e.B.__class__(*e.B.params, wires=e.B.wires))
+                new.id = " COV"
 
                 # replace the Hermitian variance with <A @ B> expectation
                 self.circuit.update_node(e, new)
@@ -1194,6 +1203,13 @@ class QNode:
             self.circuit.observables[i].return_type = qml.operation.Variance
         for i in cov_idx:
             self.circuit.observables[i].return_type = qml.operation.Covariance
+
+        self.cache = cache
+
+        print("pdA = ", pdA)
+        print("pdAB = ", pdAB)
+        print("evA = ", evA)
+        print("evB = ", evB)
 
         return np.where(where_ev, pdA, pdAB - evA * pdB - evB * pdA)
 

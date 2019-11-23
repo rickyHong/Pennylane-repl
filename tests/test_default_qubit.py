@@ -1677,19 +1677,19 @@ class TestCovariance:
 
         @qml.qnode(dev)
         def circuit(a, b, c):
-            qml.RZ(a, wires=[0])
-            qml.RX(b, wires=[0])
-            qml.RZ(c, wires=[0])
+            qml.RY(np.pi/2, wires=[1])
+            qml.RY(a, wires=[0])
+            qml.RZ(b, wires=[0])
+            qml.RY(c, wires=[0])
             qml.CNOT(wires=[0, 1])
 
-            return qml.cov_mat(qml.PauliZ(0), qml.Hadamard(1))
+            return qml.var(qml.PauliZ(0)), qml.cov(qml.PauliZ(0), qml.Hadamard(1)), qml.cov(qml.Hadamard(1), qml.PauliZ(0)), qml.var(qml.Hadamard(1))
 
         ret = circuit(0.2, 0.7, 0.4)
 
         print(ret.reshape(2,2))
 
-        jacobian_fn = autograd.jacobian(circuit)
-
-        print(jacobian_fn(0.2, 0.7, 0.4))
+        print("QNode jacobian: ")
+        print(circuit.jacobian([0.2, 0.7, 0.4]))
 
         raise Exception()

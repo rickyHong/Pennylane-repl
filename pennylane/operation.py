@@ -258,6 +258,7 @@ class Operator(abc.ABC):
         # pylint: disable=too-many-branches
         self._name = self.__class__.__name__   #: str: name of the operator
         self.queue_idx = None  #: int, None: index of the Operator in the circuit queue, or None if not in a queue
+        self.id = ""
 
         if wires is None:
             raise ValueError("Must specify the wires that {} acts on".format(self.name))
@@ -282,7 +283,7 @@ class Operator(abc.ABC):
 
     def __str__(self):
         """Print the operator name and some information."""
-        return  "{}: {} params, wires {}".format(self.name, len(self.params), self.wires)
+        return  "{}: {} params, wires {}{}".format(self.name, len(self.params), self.wires, self.id)
 
     def _check_wires(self, wires):
         """Check the validity of the operator wires.
