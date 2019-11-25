@@ -1206,10 +1206,10 @@ class QNode:
 
         self.cache = cache
 
-        print("pdA = ", pdA)
-        print("pdAB = ", pdAB)
-        print("evA = ", evA)
-        print("evB = ", evB)
+        # print("pdA = ", pdA)
+        # print("pdAB = ", pdAB)
+        # print("evA = ", evA)
+        # print("evB = ", evB)
 
         return np.where(where_ev, pdA, pdAB - evA * pdB - evB * pdA)
 
