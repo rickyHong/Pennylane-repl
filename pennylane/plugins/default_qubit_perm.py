@@ -470,10 +470,10 @@ class DefaultQubitPerm(Device):
         
         vec = np.reshape(vec, [2 ** len(wires)] + ([2] * (self.num_wires - len(wires))))
 
-        print("orig_idx = ", permutation_gate.orig_idx)
-        print("perm_idx = ", permutation_gate.perm_idx)
+        #print("orig_idx = ", permutation_gate.orig_idx)
+        #print("perm_idx = ", permutation_gate.perm_idx)
 
-        print("vec.shape = ", vec.shape)
+        #print("vec.shape = ", vec.shape)
 
         vec[permutation_gate.orig_idx, ...] = vec[permutation_gate.perm_idx, ...]
 
