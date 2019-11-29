@@ -86,6 +86,12 @@ class PermutationGate:
             for i in range(len(self.permuted_index_sets)):
                 self.permuted_index_sets[i][idx1] = self.permuted_index_sets[i][idx2]
 
+        self.orig_idx = np.array(list(range(2 ** num_wires)), dtype=int)
+
+        self.perm_idx = np.copy(self.orig_idx)
+        for a, b in self.transposition_indices:
+            self.perm_idx[a] = self.perm_idx[b]
+
 I = np.eye(2)
 # Pauli matrices
 X = PermutationGate(1, [[0, 1]])
@@ -431,7 +437,7 @@ class DefaultQubitPerm(Device):
         state_multi_index = np.transpose(tdot, inv_perm)
         return np.reshape(state_multi_index, 2 ** self.num_wires)
 
-    def apply_permutation(self, permutation_gate, vec, wires):
+    def apply_permutation2(self, permutation_gate, vec, wires):
         #print("vec before = \n", vec)
         vec = np.reshape(vec, [2] * self.num_wires)
 
@@ -447,6 +453,32 @@ class DefaultQubitPerm(Device):
         #print("vec[tuple(index_tuple)] = \n", vec[tuple(index_tuple)])
         #print("vec[tuple(perm_index_tuple)] = \n", vec[tuple(perm_index_tuple)])
         vec[tuple(perm_index_tuple)] = vec[tuple(index_tuple)]
+
+        vec = np.reshape(vec, 2 ** self.num_wires)
+
+        #print("vec after = \n", vec)
+        return vec
+
+    def apply_permutation(self, permutation_gate, vec, wires):
+        #print("vec before = \n", vec)
+        unused_idxs = [idx for idx in range(self.num_wires) if idx not in wires]
+        perm = wires + unused_idxs
+        inv_perm = np.argsort(perm)
+
+        vec = np.reshape(vec, [2] * self.num_wires)
+        vec = np.transpose(vec, perm)
+        
+        vec = np.reshape(vec, [2 ** len(wires)] + ([2] * (self.num_wires - len(wires))))
+
+        print("orig_idx = ", permutation_gate.orig_idx)
+        print("perm_idx = ", permutation_gate.perm_idx)
+
+        print("vec.shape = ", vec.shape)
+
+        vec[permutation_gate.orig_idx, ...] = vec[permutation_gate.perm_idx, ...]
+
+        vec = np.reshape(vec, [2] * self.num_wires)
+        vec = np.transpose(vec, inv_perm)
 
         vec = np.reshape(vec, 2 ** self.num_wires)
 
