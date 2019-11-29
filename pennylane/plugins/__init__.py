@@ -26,3 +26,4 @@ to verify and test quantum gradient computations.
 """
 from .default_qubit import DefaultQubit
 from .default_gaussian import DefaultGaussian
+from .default_qubit_perm import DefaultQubitPerm

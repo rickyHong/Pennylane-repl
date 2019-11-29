@@ -26,6 +26,7 @@ from pennylane.plugins.default_qubit import (CRot3, CRotx, CRoty, CRotz,
                                              Rot3, Rotx, Roty, Rotz,
                                              Rphi, Z, hermitian,
                                              spectral_decomposition, unitary)
+import itertools                                            
 
 U = np.array(
     [
@@ -1667,3 +1668,32 @@ class TestTensorSample:
             )
         ) / 16
         assert np.allclose(var, expected, atol=tol, rtol=0)
+
+class TestPerm:
+
+    @pytest.mark.parametrize("reverse", [False, True])
+    @pytest.mark.parametrize("gate,N", [
+        ("CNOT", 2),
+        ("SWAP", 2),
+        ("PauliX", 1),
+        ("Toffoli", 3),
+        ("CSWAP", 3),
+    ])
+    def test_cnot(self, reverse, gate, N):
+        dev = qml.plugins.DefaultQubit(wires=N)
+        dev_perm = qml.plugins.DefaultQubitPerm(wires=N)
+
+        gate_wires = list(reversed(range(N)) if reverse else range(N))
+
+        for basis_state in itertools.product([0, 1], repeat=N):
+            dev.reset()
+            # 000
+            dev.apply("BasisState", wires=range(N), par=[basis_state])
+            dev.apply(gate, wires=gate_wires, par=[])
+
+            dev_perm.reset()
+            # 000
+            dev_perm.apply("BasisState", wires=range(N), par=[basis_state])
+            dev_perm.apply(gate, wires=gate_wires, par=[])
+
+            assert np.allclose(dev._state, dev_perm._state, atol=0, rtol=0)
