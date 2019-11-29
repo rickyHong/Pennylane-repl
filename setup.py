@@ -50,6 +50,7 @@ info = {
     'entry_points': {
         'pennylane.plugins': [
             'default.qubit = pennylane.plugins:DefaultQubit',
+            'default.qubit.perm = pennylane.plugins:DefaultQubitPerm',
             'default.gaussian = pennylane.plugins:DefaultGaussian',
             'expt.tensornet = pennylane.beta.plugins.expt_tensornet:TensorNetwork',
             'expt.tensornet.tf = pennylane.beta.plugins.expt_tensornet_tf:TensorNetworkTF'
