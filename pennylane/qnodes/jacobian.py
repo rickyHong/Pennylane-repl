@@ -260,6 +260,21 @@ class JacobianQNode(BaseQNode):
 
         # compute the partial derivative wrt. each parameter using the appropriate method
         grad = np.zeros((self.output_dim, len(wrt)), dtype=float)
+
+        from pathos.multiprocessing import ProcessingPool as Pool
+        p = Pool(4)
+        import time
+        start = time.time()
+        print("multiprocessing part")
+        res = p.apipe(self.calculate_gradient, wrt)
+        print(time.time() - start)
+
+        print(res.get())
+
+        self.mutable = mutable  # restore original mutability
+        return grad
+
+    def calculate_gradient(self, wrt):
         for i, k in enumerate(wrt):
             par_method = method[k]
 
@@ -276,9 +291,6 @@ class JacobianQNode(BaseQNode):
                 grad[:, i] = self._pd_finite_diff(k, flat_args, kwargs, **options)
             else:
                 raise ValueError("Unknown gradient method.")
-
-        self.mutable = mutable  # restore original mutability
-        return grad
 
     def _pd_finite_diff(self, idx, args, kwargs, **options):
         """Partial derivative of the node using the finite difference method.
