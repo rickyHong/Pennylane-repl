@@ -792,8 +792,8 @@ class DefaultGaussian(Device):
         # matrices Lambda are the same in both orderings
 
         mu, cov = self.reduced_state(wires)
-        mu *= np.sqrt(2*self.hbar)
-        cov *= self.hbar/2
+        #mu *= np.sqrt(2*self.hbar)
+        #cov *= self.hbar/2
 
         Lambda1 = np.zeros((4, 4))
         Lambda1[0, 0] = 1
@@ -802,7 +802,8 @@ class DefaultGaussian(Device):
         Lambda2[1, 1] = 1
         Lambda2[3, 3] = 1
 
-        return .125 * np.trace(Lambda1 @ cov @ Lambda2 @ cov) + .5 * np.dot(mu, Lambda1 @ cov @ Lambda2 @ mu)
+        #return .125 * np.trace(Lambda1 @ cov @ Lambda2 @ cov) + .5 * np.dot(mu, Lambda1 @ cov @ Lambda2 @ mu)
+        return (np.trace(Lambda1 @ cov @ Lambda2 @ (cov + 2 * np.outer(mu, mu)))) /(2*self.hbar**2)
 
     def sample(self, observable, wires, par):
         """Return a sample of an observable.

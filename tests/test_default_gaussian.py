@@ -531,13 +531,15 @@ class TestCovariance:
         r = 0.4523
         dev.apply('SqueezedState', wires=[0], par=[r, 0])
         dev.apply('SqueezedState', wires=[1], par=[1/r, np.pi])
-        dev.apply('Beamsplitter', wires=[0, 1], par=[.5, 0])
+        dev.apply('Beamsplitter', wires=[0, 1], par=[0.5, 0])
         
         print("dev.hbar = ", dev.hbar)
 
         mu, cov = dev.reduced_state([0, 1])
-        mu *= np.sqrt(2*dev.hbar)
-        cov *= dev.hbar/2
+        # mu *= np.sqrt(2*dev.hbar)
+        # cov *= dev.hbar/2
+
+        # cov = np.array([[1, 2, 3, 4], [2, 5, 6, 7], [3, 6, 8, 9], [4, 7, 9, 10]])
 
         Lambda1 = np.zeros((4, 4))
         Lambda1[0, 0] = 1
@@ -546,18 +548,33 @@ class TestCovariance:
         Lambda2[1, 1] = 1
         Lambda2[3, 3] = 1
 
+        # print("Lambda1^2 = \n", Lambda1**2)
+        # print("Lambda2 ^2= \n", Lambda2**2)
+        print("mu = \n", mu)
+        print("cov = \n", cov)
+        # print("cov_11 = \n", Lambda1 @ cov @ Lambda1)
+        # print("cov_22 = \n", Lambda2 @ cov @ Lambda2)
+        # print("cov_12 = \n", Lambda1 @ cov @ Lambda2)
+        # print("cov_12 @ cov +mmt = \n", Lambda1 @ cov @ Lambda2@ (cov + np.outer(mu, mu)))
+
         var1 = .25 * .5 * np.trace(Lambda1 @ cov @ Lambda1 @ (cov + np.outer(mu, mu)))
         var2 = .25 * .5 * np.trace(Lambda2 @ cov @ Lambda2 @ (cov + np.outer(mu, mu)))
-        cov = .25 * .5 * np.trace(Lambda1 @ cov @ Lambda2 @ (cov + np.outer(mu, mu)))
+        cov_val = .25 * .5 * np.trace(Lambda1 @ cov @ Lambda2 @ (cov + np.outer(mu, mu)))
+
+        var1 = (np.trace(Lambda1 @ cov @ Lambda1 @ (cov + 2 * np.outer(mu, mu)))) /(2*dev.hbar**2) - 1/4
+        var2 = (np.trace(Lambda2 @ cov @ Lambda2 @ (cov + 2 * np.outer(mu, mu)))) /(2*dev.hbar**2) - 1/4
+        cov_val = (np.trace(Lambda1 @ cov @ Lambda2 @ (cov + 2 * np.outer(mu, mu)))) /(2*dev.hbar**2)
+        cov_val_prime = (np.trace(Lambda2 @ cov @ Lambda1 @ (cov + 2 * np.outer(mu, mu)))) /(2*dev.hbar**2)
         
         print("var1 = ", var1)
         print("var2 = ", var2)
-        print("cov = ", cov)
+        print("cov = ", cov_val)
         print("target var1 = ", dev.var('NumberOperator', [0], []))
         print("target var2 = ", dev.var('NumberOperator', [1], []))
 
+        assert cov_val == cov_val_prime
         assert var1 == dev.var('NumberOperator', [0], [])
-        assert var2 == dev.var('NumberOperator', [1], [])
+        assert var2 == dev.var('NumberOperator', [1], []) 
 
     def test_covariance_vacuum(self, tol):
         dev = qml.device('default.gaussian', wires=2, hbar=hbar)
