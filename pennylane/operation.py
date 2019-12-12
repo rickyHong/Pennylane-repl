@@ -960,6 +960,7 @@ class CovarianceContainer(Observable, CV):
     return_type = None
     tensor = False
     par_domain = None
+    ev_order = None
 
     def __init__(self, A, B): #pylint: disable=super-init-not-called
         self.A = A
