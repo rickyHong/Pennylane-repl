@@ -531,9 +531,12 @@ class TestCovariance:
         r = 0.4523
         dev.apply('SqueezedState', wires=[0], par=[r, 0])
         dev.apply('SqueezedState', wires=[1], par=[1/r, np.pi])
+        dev.apply('Displacement', wires=[0], par=[5, 4])
+        dev.apply('Displacement', wires=[1], par=[4, 2])
         dev.apply('Beamsplitter', wires=[0, 1], par=[0.5, 0])
         
         print("dev.hbar = ", dev.hbar)
+        print("dev._state = ", dev._state)
 
         mu, cov = dev.reduced_state([0, 1])
         # mu *= np.sqrt(2*dev.hbar)
@@ -569,12 +572,15 @@ class TestCovariance:
         print("var1 = ", var1)
         print("var2 = ", var2)
         print("cov = ", cov_val)
+        print("heisen = ", var1 * var2 - cov_val**2)
         print("target var1 = ", dev.var('NumberOperator', [0], []))
         print("target var2 = ", dev.var('NumberOperator', [1], []))
 
         assert cov_val == cov_val_prime
+        assert var1 * var2 - cov_val**2 > .25 
         assert var1 == dev.var('NumberOperator', [0], [])
         assert var2 == dev.var('NumberOperator', [1], []) 
+        assert False
 
     def test_covariance_vacuum(self, tol):
         dev = qml.device('default.gaussian', wires=2, hbar=hbar)
