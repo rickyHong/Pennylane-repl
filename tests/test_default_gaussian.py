@@ -523,6 +523,49 @@ class TestDefaultGaussianDevice:
         assert res[0] == pytest.approx(expected[0], abs=tol)
         assert res[1] == pytest.approx(expected[1], abs=tol)
 
+class TestCovariance:
+
+    def test_covariance_variance_equal(self, tol):
+        dev = qml.device('default.gaussian', wires=2, hbar=hbar)
+
+        r = 0.4523
+        dev.apply('SqueezedState', wires=[0], par=[r, 0])
+        dev.apply('SqueezedState', wires=[1], par=[1/r, np.pi])
+        dev.apply('Beamsplitter', wires=[0, 1], par=[.5, 0])
+        
+        print("dev.hbar = ", dev.hbar)
+
+        mu, cov = dev.reduced_state([0, 1])
+        mu *= np.sqrt(2*dev.hbar)
+        cov *= dev.hbar/2
+
+        Lambda1 = np.zeros((4, 4))
+        Lambda1[0, 0] = 1
+        Lambda1[2, 2] = 1
+        Lambda2 = np.zeros((4, 4))
+        Lambda2[1, 1] = 1
+        Lambda2[3, 3] = 1
+
+        var1 = .25 * .5 * np.trace(Lambda1 @ cov @ Lambda1 @ (cov + np.outer(mu, mu)))
+        var2 = .25 * .5 * np.trace(Lambda2 @ cov @ Lambda2 @ (cov + np.outer(mu, mu)))
+        cov = .25 * .5 * np.trace(Lambda1 @ cov @ Lambda2 @ (cov + np.outer(mu, mu)))
+        
+        print("var1 = ", var1)
+        print("var2 = ", var2)
+        print("cov = ", cov)
+        print("target var1 = ", dev.var('NumberOperator', [0], []))
+        print("target var2 = ", dev.var('NumberOperator', [1], []))
+
+        assert var1 == dev.var('NumberOperator', [0], [])
+        assert var2 == dev.var('NumberOperator', [1], [])
+
+    def test_covariance_vacuum(self, tol):
+        dev = qml.device('default.gaussian', wires=2, hbar=hbar)
+
+        cov = dev.cov('NumberOperator', [0], [], 'NumberOperator', [1], [])
+        
+        assert np.isclose(cov, 0, atol=tol, rtol=0)
+
 
 
 def input_logger(*args):

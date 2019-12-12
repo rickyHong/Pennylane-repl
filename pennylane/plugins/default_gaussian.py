@@ -802,7 +802,7 @@ class DefaultGaussian(Device):
         Lambda2[1, 1] = 1
         Lambda2[3, 3] = 1
 
-        return .5 * np.trace(Lambda1 @ cov @ Lambda2 @ cov) + .5 * np.dot(mu, Lambda1 @ cov @ Lambda2 @ mu)
+        return .125 * np.trace(Lambda1 @ cov @ Lambda2 @ cov) + .5 * np.dot(mu, Lambda1 @ cov @ Lambda2 @ mu)
 
     def sample(self, observable, wires, par):
         """Return a sample of an observable.
