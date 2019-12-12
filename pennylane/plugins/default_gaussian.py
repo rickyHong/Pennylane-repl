@@ -779,6 +779,31 @@ class DefaultGaussian(Device):
         _, var = self._observable_map[observable](mu, cov, wires, par, hbar=self.hbar, total_wires=self.num_wires)
         return var
 
+    def cov(self, observable1, wires1, par1, observable2, wires2, par2):
+        # assume for now that the wires are disjoint
+        wires = wires1 + wires2
+
+        if observable1 != "NumberOperator" or observable2 != "NumberOperator":
+            raise Exception("Only NumberOperator supported so far.")
+        
+        # For now we just assume the observables are number operators...
+        # see Dodonov et al., Multidimensional Hermite polynomial and photon distribution
+        # They use (p, q) ordering instead of (q, p), but in this case it does not matter because the   
+        # matrices Lambda are the same in both orderings
+
+        mu, cov = self.reduced_state(wires)
+        mu *= np.sqrt(2*self.hbar)
+        cov *= self.hbar/2
+
+        Lambda1 = np.zeros((4, 4))
+        Lambda1[0, 0] = 1
+        Lambda1[2, 2] = 1
+        Lambda2 = np.zeros((4, 4))
+        Lambda2[1, 1] = 1
+        Lambda2[3, 3] = 1
+
+        return .5 * np.trace(Lambda1 @ cov @ Lambda2 @ cov) + .5 * np.dot(mu, Lambda1 @ cov @ Lambda2 @ mu)
+
     def sample(self, observable, wires, par):
         """Return a sample of an observable.
 
