@@ -717,7 +717,7 @@ class Tensor(Observable):
 
     __imatmul__ = __matmul__
 
-class CovarianceContainer(Observable):
+class CovarianceContainer(Observable, CV):
     """Container class representing the covariance of two observables.
 
     It is used internally to enable
