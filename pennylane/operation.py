@@ -717,44 +717,6 @@ class Tensor(Observable):
 
     __imatmul__ = __matmul__
 
-class CovarianceContainer(Observable, CV):
-    """Container class representing the covariance of two observables.
-
-    It is used internally to enable
-
-    >>> qml.cov(qml.PauliX(0), qml.PauliY(1))
-    """
-    return_type = None
-    tensor = False
-    par_domain = None
-
-    def __init__(self, A, B): #pylint: disable=super-init-not-called
-        self.A = A
-        self.B = B
-
-    def __str__(self):
-        return 'Cov({}, {})'.format(self.A, self.B)
-
-    @property
-    def name(self):
-        return 'Cov({}, {})'.format(self.A.name, self.B.name)
-
-    @property
-    def num_params(self):
-        return len(self.A.params) + len(self.B.params)
-
-    @property
-    def num_wires(self):
-        return self.A.num_wires + self.B.num_wires
-
-    @property
-    def wires(self):
-        return [o.wires for o in [self.A, self.B]]
-
-    @property
-    def params(self):
-        return [p for sublist in [o.params for o in [self.A, self.B]] for p in sublist]
-
 #=============================================================================
 # CV Operations and observables
 #=============================================================================
@@ -987,3 +949,41 @@ class CVObservable(CV, Observable):
         p = self.parameters
         U = self._heisenberg_rep(p) # pylint: disable=assignment-from-none
         return self.heisenberg_expand(U, num_wires)
+
+class CovarianceContainer(Observable, CV):
+    """Container class representing the covariance of two observables.
+
+    It is used internally to enable
+
+    >>> qml.cov(qml.PauliX(0), qml.PauliY(1))
+    """
+    return_type = None
+    tensor = False
+    par_domain = None
+
+    def __init__(self, A, B): #pylint: disable=super-init-not-called
+        self.A = A
+        self.B = B
+
+    def __str__(self):
+        return 'Cov({}, {})'.format(self.A, self.B)
+
+    @property
+    def name(self):
+        return 'Cov({}, {})'.format(self.A.name, self.B.name)
+
+    @property
+    def num_params(self):
+        return len(self.A.params) + len(self.B.params)
+
+    @property
+    def num_wires(self):
+        return self.A.num_wires + self.B.num_wires
+
+    @property
+    def wires(self):
+        return [o.wires for o in [self.A, self.B]]
+
+    @property
+    def params(self):
+        return [p for sublist in [o.params for o in [self.A, self.B]] for p in sublist]
