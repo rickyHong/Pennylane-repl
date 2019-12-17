@@ -336,7 +336,7 @@ class QNode:
         self.ev = list(res)  #: list[Observable]: returned observables
 
         # list all operations except for the identity
-        non_identity_ops = [op for op in self.queue + self.ev if not (isinstance(op, qml.Identity) or isinstance(op, qml.operation.CovarianceContainer)]
+        non_identity_ops = [op for op in self.queue + self.ev if not (isinstance(op, qml.Identity) or isinstance(op, qml.operation.CovarianceContainer))]
 
         # contains True if op is a CV, False if it is a discrete variable
         are_cvs = [isinstance(op, qml.operation.CV) for op in non_identity_ops]
