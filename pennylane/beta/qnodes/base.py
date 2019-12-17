@@ -409,7 +409,7 @@ class BaseQNode:
 
         # True if op is a CV, False if it is a discrete variable (Identity could be either)
         are_cvs = [
-            isinstance(op, CV) for op in self.queue + list(res) if not isinstance(op, qml.Identity)
+            isinstance(op, CV) for op in self.queue + list(res) if not (isinstance(op, qml.Identity) or isinstance(op, qml.operation.CovarianceContainer))
         ]
 
         if not all(are_cvs) and any(are_cvs):
