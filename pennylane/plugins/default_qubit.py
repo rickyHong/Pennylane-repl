@@ -446,14 +446,19 @@ class DefaultQubit(Device):
 
 
     def cov(self, observable1, wires1, par1, observable2, wires2, par2):
-        # assume for now that the wires are disjoint
-        wires = wires1 + wires2
-
         if self.analytic:
-            A = np.kron(self.get_operator_matrix_for_measurement(observable1, par1), np.eye(2**len(wires2)))
-            B = np.kron(np.eye(2**len(wires1)), self.get_operator_matrix_for_measurement(observable2, par2))
+            if wires1 == wires2:
+                A = self.get_operator_matrix_for_measurement(observable1, par1)
+                B = self.get_operator_matrix_for_measurement(observable2, par2)
 
-            cov = .5 * self.ev(A @ B + B @ A, wires) - self.ev(A, wires) * self.ev(B, wires)
+                cov = .5 * self.ev(A @ B + B @ A, wires1) - self.ev(A, wires1) * self.ev(B, wires1)
+            else:
+                all_wires = wires1 + wires2
+                # Assume that the operators are disjoint
+                A = np.kron(self.get_operator_matrix_for_measurement(observable1, par1), np.eye(2**len(wires2)))
+                B = np.kron(np.eye(2**len(wires1)), self.get_operator_matrix_for_measurement(observable2, par2))
+
+                cov = .5 * self.ev(A @ B + B @ A, all_wires) - self.ev(A, all_wires) * self.ev(B, all_wires)
         else:
             raise Exception("No non-analytic covariance yet")
 
