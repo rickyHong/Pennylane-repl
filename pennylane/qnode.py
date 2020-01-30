@@ -1129,7 +1129,12 @@ class QNode:
             elif e.return_type == qml.operation.Covariance:
 
                 # make a copy of the original variance
-                new = qml.expval(e.A @ e.B)
+                if e.A.wires == e.B.wires:
+                    # They share the same wires, assume they are Hermitian
+                    new = qml.expval(qml.Hermitian(.5 * (e.A.parameters[0] @ e.B.parameters[0] + e.B.parameters[0] @ e.A.parameters[0])))
+                else:
+                    # Assume commuting generators on different wires
+                    new = qml.expval(e.A @ e.B)
 
                 # replace the Hermitian variance with <A @ B> expectation
                 #print("Update {} -> {}".format(e, new))
