@@ -1131,7 +1131,7 @@ class QNode:
                 # make a copy of the original variance
                 if e.A.wires == e.B.wires:
                     # They share the same wires, assume they are Hermitian
-                    new = qml.expval(qml.Hermitian(.5 * (e.A.parameters[0] @ e.B.parameters[0] + e.B.parameters[0] @ e.A.parameters[0])))
+                    new = qml.expval(qml.Hermitian(.5 * (e.A.parameters[0] @ e.B.parameters[0] + e.B.parameters[0] @ e.A.parameters[0]), e.A.wires))
                 else:
                     # Assume commuting generators on different wires
                     new = qml.expval(e.A @ e.B)
