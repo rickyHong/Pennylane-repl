@@ -1,5 +1,7 @@
 .. image:: doc/_static/pennylane_thin.png
     :alt: PennyLane
+    
+https://pennylane.ai/qml/demonstrations.html    
 
 ###################################
 
